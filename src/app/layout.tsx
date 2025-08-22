@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import ReduxProvider from '@/store/ReduxProvider';
 import AuthDebug from '@/components/AuthDebug';
 import TokenRefresh from '@/components/TokenRefresh';
+import 'antd/dist/reset.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ReduxProvider>
           <TokenRefresh />
           <Header />
-          <main className="p-4">{children}</main>
+          <main className="p-4 pt-20">{children}</main>
           <AuthDebug />
         </ReduxProvider>
       </body>
