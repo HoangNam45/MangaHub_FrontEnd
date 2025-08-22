@@ -1,5 +1,5 @@
 class OAuthService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  private baseURL = process.env.NEXT_PUBLIC_API_URL;
 
   // Redirect to Google OAuth
   initiateGoogleAuth() {
