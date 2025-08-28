@@ -16,6 +16,7 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  console.log(mangaList);
 
   // MangaDex API có giới hạn offset tối đa khoảng 10000
   const MAX_OFFSET = 10000;
