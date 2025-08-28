@@ -1,13 +1,8 @@
-import axios from 'axios';
+import axiosClient from '@/lib/axiosClient';
 import type { Manga, MangaListResponse, FetchMangaParams } from '@/types/manga';
 
-// Tạo một axios instance riêng cho MangaDex API
-const mangaDexClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_MANGA_DEX_API_URL,
-});
-
 export const mangaService = {
-  // Fetch manga list từ MangaDex API
+  // Fetch manga list từ backend
   async fetchMangaList(params: FetchMangaParams = {}): Promise<MangaListResponse> {
     try {
       const {
@@ -15,43 +10,24 @@ export const mangaService = {
         offset = 0,
         order = { latestUploadedChapter: 'desc' },
         availableTranslatedLanguage = ['en'],
-        includes = ['cover_art', 'author', 'artist'],
       } = params;
 
-      const response = await mangaDexClient.get('/manga', {
+      const response = await axiosClient.get('/manga', {
         params: {
           limit,
           offset,
-          'order[latestUploadedChapter]': order.latestUploadedChapter,
-          'availableTranslatedLanguage[]': availableTranslatedLanguage,
-          'includes[]': includes,
+          order: order.latestUploadedChapter,
+          language: availableTranslatedLanguage,
         },
       });
 
-      const mangaWithCovers: Manga[] = response.data.data.map((manga: Manga) => {
-        const coverRel = manga.relationships.find((r) => r.type === 'cover_art');
-        const fileName = (coverRel?.attributes as any)?.fileName;
-
-        const coverUrl = fileName
-          ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}`
-          : null;
-
-        const authorList = manga.relationships
-          .filter((r) => r.type === 'author' || r.type === 'artist')
-          .map((r) => {
-            const n = (r.attributes as any)?.name;
-            return typeof n === 'string' ? n : n?.en;
-          })
-          .filter(Boolean) as string[];
-
-        const author = authorList.length ? authorList.join(', ') : 'Unknown';
-
-        return { ...manga, coverUrl: coverUrl || undefined, author };
-      });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch manga data');
+      }
 
       return {
-        data: mangaWithCovers,
-        total: response.data.total || 0,
+        data: response.data.data,
+        total: response.data.pagination.total,
       };
     } catch (error: any) {
       throw new Error(
@@ -60,87 +36,46 @@ export const mangaService = {
     }
   },
 
-  // Search manga
+  // Search manga từ backend
   async searchManga(
     query: string,
     params: Omit<FetchMangaParams, 'order'> = {}
   ): Promise<MangaListResponse> {
     try {
-      const {
-        limit = 25,
-        offset = 0,
-        availableTranslatedLanguage = ['en'],
-        includes = ['cover_art', 'author', 'artist'],
-      } = params;
+      const { limit = 25, offset = 0, availableTranslatedLanguage = ['en'] } = params;
 
-      const response = await mangaDexClient.get('/manga', {
+      const response = await axiosClient.get('/manga/search', {
         params: {
-          title: query,
+          q: query,
           limit,
           offset,
-          'availableTranslatedLanguage[]': availableTranslatedLanguage,
-          'includes[]': includes,
+          language: availableTranslatedLanguage,
         },
       });
 
-      const mangaWithCovers: Manga[] = response.data.data.map((manga: Manga) => {
-        const coverRel = manga.relationships.find((r) => r.type === 'cover_art');
-        const fileName = (coverRel?.attributes as any)?.fileName;
-
-        const coverUrl = fileName
-          ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}`
-          : null;
-
-        const authorList = manga.relationships
-          .filter((r) => r.type === 'author' || r.type === 'artist')
-          .map((r) => {
-            const n = (r.attributes as any)?.name;
-            return typeof n === 'string' ? n : n?.en;
-          })
-          .filter(Boolean) as string[];
-
-        const author = authorList.length ? authorList.join(', ') : 'Unknown';
-
-        return { ...manga, coverUrl: coverUrl || undefined, author };
-      });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to search manga');
+      }
 
       return {
-        data: mangaWithCovers,
-        total: response.data.total || 0,
+        data: response.data.data,
+        total: response.data.pagination.total,
       };
     } catch (error: any) {
       throw new Error(error.response?.data?.message || error.message || 'Failed to search manga');
     }
   },
 
-  // Fetch manga by ID
+  // Fetch manga by ID từ backend
   async getMangaById(id: string): Promise<Manga> {
     try {
-      const response = await mangaDexClient.get(`/manga/${id}`, {
-        params: {
-          'includes[]': ['cover_art', 'author', 'artist'],
-        },
-      });
+      const response = await axiosClient.get(`/manga/${id}`);
 
-      const manga = response.data.data;
-      const coverRel = manga.relationships.find((r: any) => r.type === 'cover_art');
-      const fileName = (coverRel?.attributes as any)?.fileName;
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch manga details');
+      }
 
-      const coverUrl = fileName
-        ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}`
-        : null;
-
-      const authorList = manga.relationships
-        .filter((r: any) => r.type === 'author' || r.type === 'artist')
-        .map((r: any) => {
-          const n = (r.attributes as any)?.name;
-          return typeof n === 'string' ? n : n?.en;
-        })
-        .filter(Boolean) as string[];
-
-      const author = authorList.length ? authorList.join(', ') : 'Unknown';
-
-      return { ...manga, coverUrl: coverUrl || undefined, author };
+      return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || error.message || 'Failed to fetch manga details'
