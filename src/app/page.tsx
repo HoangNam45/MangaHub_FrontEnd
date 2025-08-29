@@ -23,7 +23,7 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchManga() {
-      const limit = 25;
+      const limit = 15;
       const offset = (page - 1) * limit;
 
       // Kiểm tra offset không vượt quá giới hạn
