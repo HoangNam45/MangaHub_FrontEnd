@@ -1,5 +1,5 @@
 class OAuthService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL;
+  private baseURL = process.env.NEXT_PUBLIC_MANGA_HUB_API_URL;
 
   // Redirect to Google OAuth
   initiateGoogleAuth() {
