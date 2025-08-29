@@ -6,7 +6,7 @@ export const mangaService = {
   async fetchMangaList(params: FetchMangaParams = {}): Promise<MangaListResponse> {
     try {
       const {
-        limit = 25,
+        limit = 15,
         offset = 0,
         order = { latestUploadedChapter: 'desc' },
         availableTranslatedLanguage = ['en'],
