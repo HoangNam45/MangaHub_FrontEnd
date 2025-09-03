@@ -1,7 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['uploads.mangadex.org'], // thêm domain cho phép
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'uploads.mangadex.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mangadex.network',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.mangadex.network',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cmdxd98sb0x3yprd.mangadex.network',
+      },
+    ],
   },
 };
 
