@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import Image from 'next/image';
 import { mangaService } from '@/services/mangaService';
 import ChapterNavigation from '@/components/ChapterNavigation/ChapterNavigation';
 
@@ -64,12 +65,14 @@ export default function MangaChapterPage({
       {/* Chapter pages */}
       <div className="flex flex-col items-center">
         {pages.images?.map((image: any, idx: number) => (
-          <img
+          <Image
             key={idx}
             src={image.url}
             alt={`Page ${idx + 1}`}
+            width={800}
+            height={1200}
             className="w-full max-w-3xl"
-            loading="lazy"
+            priority={idx === 0}
           />
         ))}
       </div>
