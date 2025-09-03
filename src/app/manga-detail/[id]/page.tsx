@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Tag } from 'antd';
 import { mangaService } from '@/services/mangaService';
 import { Button } from '@/components/ui/button';
@@ -44,20 +45,25 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
     <div className="flex flex-col">
       {/* Cover background */}
       <div className="relative h-[400px] w-full overflow-hidden">
-        <img
+        <Image
           src={manga.manga.coverUrl}
           alt="cover"
+          fill
           className="absolute inset-0 w-full h-full object-cover scale-110 blur-sm"
+          priority
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
       </div>
       {/* Small cover, pulled up */}
       <div className="-mt-42 ml-30 z-99 flex">
-        <img
+        <Image
           src={manga.manga.coverUrl}
           alt="manga cover"
+          width={192}
+          height={256}
           className="w-48 h-64 object-cover rounded-lg shadow-lg "
+          priority
         />
         <div className="text-white text-2xl ml-4 mt-24">
           <div className="min-h-14">
@@ -126,9 +132,11 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
                 className="group cursor-pointer"
               >
                 <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 flex items-center h-28">
-                  <img
+                  <Image
                     src={recommendedItem.coverUrl}
                     alt={recommendedItem.attributes?.title?.en || 'Manga'}
+                    width={96}
+                    height={112}
                     className="h-full w-24 object-cover rounded mr-3 group-hover:scale-105 transition-transform"
                     style={{ minWidth: 96, maxWidth: 120 }}
                   />
