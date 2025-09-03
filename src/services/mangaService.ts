@@ -82,4 +82,32 @@ export const mangaService = {
       );
     }
   },
+
+  async getMangaDetail(id: string): Promise<Manga> {
+    try {
+      const response = await axiosClient.get(`/manga/${id}/detail`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch manga details');
+      }
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || 'Failed to fetch manga details'
+      );
+    }
+  },
+
+  async getChapterImages(chapterId: string): Promise<string[]> {
+    try {
+      const response = await axiosClient.get(`/manga/chapter/${chapterId}/images`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch chapter pages');
+      }
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || 'Failed to fetch chapter pages'
+      );
+    }
+  },
 };

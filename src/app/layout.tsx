@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ReduxProvider>
           <TokenRefresh />
           <Header />
-          <main className="p-4 pt-20">{children}</main>
+          <main className="pt-16">{children}</main>
           <AuthDebug />
         </ReduxProvider>
       </body>
