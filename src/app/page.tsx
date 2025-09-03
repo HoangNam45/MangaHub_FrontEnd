@@ -9,6 +9,7 @@ import { Filter, Heart, Calendar, User } from 'lucide-react';
 import { Pagination, Tag } from 'antd';
 import { mangaService } from '@/services/mangaService';
 import type { Manga } from '@/types/manga';
+import Link from 'next/link';
 
 export default function Home() {
   const [mangaList, setMangaList] = useState<Manga[]>([]);
@@ -62,7 +63,7 @@ export default function Home() {
   }, [page]);
 
   return (
-    <div className="max-w-6xl mx-auto p-2">
+    <div className="max-w-6xl mx-auto p-6">
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Latest Manga</h2>
@@ -91,60 +92,62 @@ export default function Home() {
       {/* Manga grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
         {mangaList.map((manga) => (
-          <Card
-            key={manga.id}
-            className="relative cursor-pointer flex flex-col overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-          >
-            {/* Cover */}
-            {manga.coverUrl && (
-              <Image
-                src={manga.coverUrl}
-                alt={manga.attributes.title.en || 'Manga'}
-                width={600}
-                height={800}
-                className="h-64 w-full object-cover transition-transform duration-300 hover:scale-105"
-              />
-            )}
+          <Link key={manga.id} href={`/manga-detail/${manga.id}`} className="block">
+            <Card className="relative cursor-pointer flex flex-col overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              {/* Cover */}
+              {manga.coverUrl && (
+                <Image
+                  src={manga.coverUrl}
+                  alt={manga.attributes.title.en || 'Manga'}
+                  width={600}
+                  height={800}
+                  className="h-64 w-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              )}
 
-            {/* Info section */}
-            <div className="p-3 flex flex-col flex-1">
-              <p className="line-clamp-2 font-semibold text-sm mb-1">
-                {manga.attributes.title.en || 'No Title'}
-              </p>
+              {/* Info section */}
+              <div className="p-3 flex flex-col flex-1">
+                <p className="line-clamp-2 font-semibold text-sm mb-1">
+                  {manga.attributes.title.en || 'No Title'}
+                </p>
 
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
-                <span className="inline-flex items-center gap-1">
-                  <User className="h-3.5 w-3.5" />
-                  {manga.author || 'Unknown'}
-                </span>
-                {manga.attributes.year && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
                   <span className="inline-flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {manga.attributes.year}
+                    <User className="h-3.5 w-3.5" />
+                    {manga.author || 'Unknown'}
                   </span>
-                )}
-                {manga.attributes.status && (
-                  <span className="capitalize">{manga.attributes.status}</span>
-                )}
+                  {manga.attributes.year && (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {manga.attributes.year}
+                    </span>
+                  )}
+                  {manga.attributes.status && (
+                    <span className="capitalize">{manga.attributes.status}</span>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1 mt-auto">
+                  {manga.attributes.tags?.slice(0, 2).map((tag, idx) => (
+                    <Tag key={idx}>{tag.attributes.name.en}</Tag>
+                  ))}
+                </div>
               </div>
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1 mt-auto">
-                {manga.attributes.tags?.slice(0, 2).map((tag, idx) => (
-                  <Tag key={idx}>{tag.attributes.name.en}</Tag>
-                ))}
-              </div>
-            </div>
-
-            {/* Floating action (Follow) */}
-            <Button
-              size="sm"
-              className="absolute cursor-pointer right-2 top-2 z-10 bg-white/90 text-black hover:bg-white shadow"
-            >
-              <Heart className="mr-1 h-4 w-4 text-red-500" />
-              Follow
-            </Button>
-          </Card>
+              {/* Floating action (Follow) */}
+              <Button
+                size="sm"
+                className="absolute cursor-pointer right-2 top-2 z-10 bg-white/90 text-black hover:bg-white shadow"
+                onClick={(e) => {
+                  e.preventDefault(); /* handle follow here */
+                }}
+              >
+                <Heart className="mr-1 h-4 w-4 text-red-500" />
+                Follow
+              </Button>
+            </Card>
+          </Link>
         ))}
       </div>
 

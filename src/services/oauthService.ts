@@ -1,15 +1,15 @@
 class OAuthService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL;
+  private baseURL = process.env.NEXT_PUBLIC_MANGA_HUB_API_URL;
 
   // Redirect to Google OAuth
   initiateGoogleAuth() {
-    const authURL = `${this.baseURL}/api/v1/auth/google`;
+    const authURL = `${this.baseURL}/auth/google`;
     window.location.href = authURL;
   }
 
   // Redirect to Facebook OAuth
   initiateFacebookAuth() {
-    const authURL = `${this.baseURL}/api/v1/auth/facebook`;
+    const authURL = `${this.baseURL}/auth/facebook`;
     window.location.href = authURL;
   }
 
@@ -39,7 +39,7 @@ class OAuthService {
   // Get user info after OAuth success
   async getUserInfo(token: string) {
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/auth/me`, {
+      const response = await fetch(`${this.baseURL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

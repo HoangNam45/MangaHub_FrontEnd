@@ -40,7 +40,7 @@ export default function Header() {
               <Button variant="outline">Sign up</Button>
             </Link>
             <Link href="/login">
-              <Button>Sign in</Button>
+              <Button variant="primary">Sign in</Button>
             </Link>
           </>
         )}
