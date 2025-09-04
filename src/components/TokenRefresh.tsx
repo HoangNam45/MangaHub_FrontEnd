@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { checkTokenExpiration, refreshToken } from '@/store/slices/authSlice';
+import { checkTokenExpiration, clearExpiredTokens, refreshToken } from '@/store/slices/authSlice';
 import { tokenService } from '@/services/tokenService';
 
 export default function TokenRefresh() {
@@ -14,9 +14,13 @@ export default function TokenRefresh() {
 
     // Check token expiration and refresh if needed
     const checkAndRefresh = () => {
+      const wasExpired = token && tokenService.isTokenExpired(token);
       dispatch(checkTokenExpiration());
 
-      if (tokenService.shouldRefreshToken()) {
+      // If token was expired, clear it from cookies
+      if (wasExpired) {
+        dispatch(clearExpiredTokens());
+      } else if (tokenService.shouldRefreshToken()) {
         dispatch(refreshToken()).catch(console.error);
       }
     };
@@ -40,7 +44,10 @@ export default function TokenRefresh() {
         dispatch(checkTokenExpiration());
       }
 
-      if (authState.isAuthenticated && tokenService.shouldRefreshToken()) {
+      const wasExpired = authState.token && tokenService.isTokenExpired(authState.token);
+      if (wasExpired) {
+        dispatch(clearExpiredTokens());
+      } else if (authState.isAuthenticated && tokenService.shouldRefreshToken()) {
         dispatch(refreshToken()).catch(console.error);
       }
     };
@@ -53,7 +60,10 @@ export default function TokenRefresh() {
           dispatch(checkTokenExpiration());
         }
 
-        if (authState.isAuthenticated && tokenService.shouldRefreshToken()) {
+        const wasExpired = authState.token && tokenService.isTokenExpired(authState.token);
+        if (wasExpired) {
+          dispatch(clearExpiredTokens());
+        } else if (authState.isAuthenticated && tokenService.shouldRefreshToken()) {
           dispatch(refreshToken()).catch(console.error);
         }
       }

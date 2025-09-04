@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Avatar, Dropdown } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
@@ -28,12 +30,33 @@ export default function Header() {
 
       <div className="space-x-2">
         {isAuthenticated ? (
-          <>
-            <span className="text-sm text-gray-600">Welcome, {user?.name || user?.email}</span>
-            <Button variant="outline" onClick={logout}>
-              Sign out
-            </Button>
-          </>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'signout',
+                  label: (
+                    <Button
+                      variant="outline"
+                      className="w-full cursor-pointer text-left"
+                      onClick={logout}
+                    >
+                      Sign out
+                    </Button>
+                  ),
+                },
+              ],
+            }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <div className="flex items-center gap-2 cursor-pointer select-none">
+              <span className="text-sm font-medium text-gray-800  truncate">
+                {user?.name || user?.email}
+              </span>
+              <Avatar size={36} icon={<UserOutlined />} style={{ backgroundColor: '#bfbfbf' }} />
+            </div>
+          </Dropdown>
         ) : (
           <>
             <Link href="/register">

@@ -10,6 +10,8 @@ export const mangaService = {
         offset = 0,
         order = { latestUploadedChapter: 'desc' },
         availableTranslatedLanguage = ['en'],
+        status,
+        includedTags,
       } = params;
 
       const response = await axiosClient.get('/manga', {
@@ -18,6 +20,8 @@ export const mangaService = {
           offset,
           order: order.latestUploadedChapter,
           language: availableTranslatedLanguage,
+          status: status?.join(','),
+          includedTags: includedTags?.join(','),
         },
       });
 
@@ -42,7 +46,13 @@ export const mangaService = {
     params: Omit<FetchMangaParams, 'order'> = {}
   ): Promise<MangaListResponse> {
     try {
-      const { limit = 25, offset = 0, availableTranslatedLanguage = ['en'] } = params;
+      const {
+        limit = 25,
+        offset = 0,
+        availableTranslatedLanguage = ['en'],
+        status,
+        includedTags,
+      } = params;
 
       const response = await axiosClient.get('/manga/search', {
         params: {
@@ -50,6 +60,8 @@ export const mangaService = {
           limit,
           offset,
           language: availableTranslatedLanguage,
+          status: status?.join(','),
+          includedTags: includedTags?.join(','),
         },
       });
 

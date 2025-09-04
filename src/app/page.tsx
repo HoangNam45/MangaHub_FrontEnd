@@ -3,26 +3,58 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Filter, Heart, Calendar, User } from 'lucide-react';
 import { Pagination, Tag } from 'antd';
 import { mangaService } from '@/services/mangaService';
 import type { Manga } from '@/types/manga';
 import Link from 'next/link';
+import MangaFilter from '@/components/MangaFilter/MangaFilter';
+import SearchInput from '@/components/SearchInput/SearchInput';
+import { AVAILABLE_TAGS } from '@/data/tags';
+import { useSearch } from '@/hooks/useSearch';
+
+// Hardcoded tags từ MangaDx API
+
+interface FilterState {
+  tags: string[];
+  status: string[]; // Change back to string[] for multiple selection
+}
 
 export default function Home() {
+  // Browse manga states (không thay đổi fetchMangaList logic)
   const [mangaList, setMangaList] = useState<Manga[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  console.log(mangaList);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    tags: [],
+    status: [],
+  });
 
-  // MangaDex API có giới hạn offset tối đa khoảng 10000
+  // Search functionality (riêng biệt)
+  const search = useSearch(activeFilters);
+  const { isSearchMode, searchPerformed, performSearch } = search;
+
+  // Update search filters when activeFilters change
+  useEffect(() => {
+    if (isSearchMode && searchPerformed) {
+      // Re-perform search with new filters
+      performSearch(searchPerformed, activeFilters);
+    }
+  }, [activeFilters, performSearch, isSearchMode, searchPerformed]);
+
+  // MangaDx API có giới hạn offset tối đa khoảng 10000
   const MAX_OFFSET = 10000;
 
   useEffect(() => {
+    // Không gọi browse API khi đang ở search mode
+    if (isSearchMode) {
+      return;
+    }
+
     async function fetchManga() {
       const limit = 15;
       const offset = (page - 1) * limit;
@@ -44,7 +76,9 @@ export default function Home() {
           offset,
           order: { latestUploadedChapter: 'desc' },
           availableTranslatedLanguage: ['en'],
-          includes: ['cover_art', 'author', 'artist'],
+          includes: ['cover_art', 'author'],
+          status: activeFilters.status.length > 0 ? activeFilters.status : undefined,
+          includedTags: activeFilters.tags.length > 0 ? activeFilters.tags : undefined,
         });
 
         setMangaList(response.data);
@@ -60,40 +94,106 @@ export default function Home() {
     }
 
     fetchManga();
-  }, [page]);
+  }, [page, activeFilters, isSearchMode]);
+
+  const handleApplyFilter = (filters: FilterState) => {
+    setActiveFilters(filters);
+    setPage(1); // Reset to first page when filters change
+  };
+
+  const hasActiveFilters = activeFilters.tags.length > 0 || activeFilters.status.length > 0;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Latest Manga</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">
+            {search.isSearchMode
+              ? `Search Results for "${search.searchPerformed}"`
+              : 'Latest Manga'}
+          </h2>
+          {(hasActiveFilters || search.isSearchMode) && (
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <>
+                  <span className="text-sm text-gray-600">Filters:</span>
+                  {activeFilters.status.map((status) => (
+                    <Tag key={status}>{status}</Tag>
+                  ))}
+                  {activeFilters.tags.slice(0, 2).map((tagId) => {
+                    const tag = AVAILABLE_TAGS.find((t) => t.id === tagId);
+                    return <Tag key={tagId}>{tag?.name || tagId}</Tag>;
+                  })}
+                  {activeFilters.tags.length > 2 && (
+                    <Tag>+{activeFilters.tags.length - 2} more</Tag>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
-          <Input placeholder="Search manga..." className="w-64" />
-          <Button variant="outline" size="icon">
+          <SearchInput
+            searchQuery={search.searchQuery}
+            setSearchQuery={search.setSearchQuery}
+            suggestions={search.suggestions}
+            showSuggestions={search.showSuggestions}
+            loadingSuggestions={search.loadingSuggestions}
+            onSearch={search.performSearch}
+            onClearSearch={search.clearSearch}
+            onHideSuggestions={search.hideSuggestions}
+            onSelectSuggestion={search.selectSuggestion}
+            isSearchMode={search.isSearchMode}
+            activeFilters={activeFilters}
+            className="w-64"
+          />
+          <Button variant="outline" size="icon" onClick={() => setFilterModalOpen(true)}>
             <Filter className="h-4 w-4" />
           </Button>
+          {(hasActiveFilters || search.isSearchMode) && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setActiveFilters({ tags: [], status: [] });
+                search.clearSearch();
+              }}
+            >
+              Clear All
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Error message */}
-      {error && (
+      {(error || search.searchError) && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+          {error || search.searchError}
         </div>
       )}
 
       {/* Loading state */}
-      {loading && (
+      {(loading || search.loadingSearch) && (
         <div className="flex justify-center items-center py-12">
-          <div className="text-gray-500">Loading manga...</div>
+          <div className="text-gray-500">
+            {search.isSearchMode ? 'Searching manga...' : 'Loading manga...'}
+          </div>
+        </div>
+      )}
+
+      {/* Results info */}
+      {search.isSearchMode && !search.loadingSearch && (
+        <div className="mb-4 text-sm text-gray-600">
+          Found {search.searchTotal} manga matching "{search.searchPerformed}"
+          {hasActiveFilters && ' with applied filters'}
         </div>
       )}
 
       {/* Manga grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-        {mangaList.map((manga) => (
+        {(search.isSearchMode ? search.searchResults : mangaList).map((manga) => (
           <Link key={manga.id} href={`/manga-detail/${manga.id}`} className="block">
-            <Card className="relative cursor-pointer flex flex-col overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+            <Card className="relative max-h-114 cursor-pointer flex flex-col overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
               {/* Cover */}
               {manga.coverUrl && (
                 <Image
@@ -107,14 +207,14 @@ export default function Home() {
 
               {/* Info section */}
               <div className="p-3 flex flex-col flex-1">
-                <p className="line-clamp-2 font-semibold text-sm mb-1">
+                <p className="line-clamp-2 min-h-[40px] font-semibold text-sm mb-1">
                   {manga.attributes.title.en || 'No Title'}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
+                <div className="flex flex-wrap min-h-[36px] items-center gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
                   <span className="inline-flex items-center gap-1">
-                    <User className="h-3.5 w-3.5" />
-                    {manga.author || 'Unknown'}
+                    <User className="h-3.5 w-3.5 " />
+                    <span className="line-clamp-1">{manga.author || 'Unknown'}</span>
                   </span>
                   {manga.attributes.year && (
                     <span className="inline-flex items-center gap-1">
@@ -128,7 +228,7 @@ export default function Home() {
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1 mt-auto">
+                <div className="flex flex-wrap gap-1 mt-auto ">
                   {manga.attributes.tags?.slice(0, 2).map((tag, idx) => (
                     <Tag key={idx}>{tag.attributes.name.en}</Tag>
                   ))}
@@ -154,13 +254,22 @@ export default function Home() {
       {/* Ant Design Pagination */}
       <div className="flex justify-center mt-6">
         <Pagination
-          current={page}
-          pageSize={25}
-          total={total}
+          current={search.isSearchMode ? search.searchPage : page}
+          pageSize={15}
+          total={search.isSearchMode ? search.searchTotal : total}
           showSizeChanger={false}
-          onChange={(p) => setPage(p)}
+          onChange={(p) => (search.isSearchMode ? search.setSearchPage(p) : setPage(p))}
         />
       </div>
+
+      {/* Filter Modal */}
+      <MangaFilter
+        open={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        availableTags={AVAILABLE_TAGS}
+        currentFilters={activeFilters}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   loginWithToken,
   logoutUser,
   checkTokenExpiration,
+  clearExpiredTokens,
   refreshToken,
   initializeAuth,
 } from '@/store/slices/authSlice';
@@ -25,7 +26,13 @@ export function useAuth() {
     if (!isAuthenticated) return;
 
     // Check token expiration on mount and periodically
+    const wasExpired = token && tokenService.isTokenExpired(token);
     dispatch(checkTokenExpiration());
+
+    // If token was expired, clear it from cookies
+    if (wasExpired) {
+      dispatch(clearExpiredTokens());
+    }
 
     // Auto-refresh token if needed
     if (tokenService.shouldRefreshToken()) {
@@ -34,15 +41,19 @@ export function useAuth() {
 
     // Check token expiration and refresh needs every minute
     const interval = setInterval(() => {
+      const isExpired = token && tokenService.isTokenExpired(token);
       dispatch(checkTokenExpiration());
 
-      if (tokenService.shouldRefreshToken()) {
+      // If token expired, clear it from cookies
+      if (isExpired) {
+        dispatch(clearExpiredTokens());
+      } else if (tokenService.shouldRefreshToken()) {
         dispatch(refreshToken());
       }
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, token]);
 
   const login = async (token: string) => {
     try {
