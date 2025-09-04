@@ -115,6 +115,12 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async () => {
   return authState;
 });
 
+// Async thunk for clearing expired tokens
+export const clearExpiredTokens = createAsyncThunk('auth/clearExpiredTokens', async () => {
+  tokenService.clearTokens();
+  return null;
+});
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -130,7 +136,8 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        tokenService.clearTokens();
+        // Token đã hết hạn, cần dispatch clearExpiredTokens để clear cookies
+        // Không thể gọi trực tiếp ở đây vì đây là reducer
       }
     },
   },
@@ -191,6 +198,12 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.isAuthenticated = action.payload.isAuthenticated;
         state.isLoading = false;
+      })
+
+      // Clear expired tokens
+      .addCase(clearExpiredTokens.fulfilled, (_state) => {
+        // State đã được clear trong checkTokenExpiration reducer
+        // Thunk này chỉ để clear cookies
       });
   },
 });

@@ -68,7 +68,7 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
         <div className="text-white text-2xl ml-4 mt-24">
           <div className="min-h-14">
             {manga.manga.attributes.title.en}
-            <div className="text-base font-light">{manga.manga.author}</div>
+            <div className="text-base font-light line-clamp-1">{manga.manga.author}</div>
           </div>
           <div className="flex flex-wrap gap-2 mt-7">
             {manga.manga.attributes.tags?.map((tag: any, index: number) => (
@@ -92,7 +92,7 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
             >
               <Button
                 variant="outline"
-                className="!text-black cursor-pointer bg-[#E5E7EB]  !text-base w-full"
+                className="!text-black cursor-pointer bg-[#E5E7EB]  !text-base w-50"
               >
                 Read from Beginning
               </Button>
@@ -106,19 +106,26 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
         {/* Chapters List */}
         <div className="flex flex-col overflow-y-auto max-h-140 gap-1 w-[45%]">
           <h3 className="text-lg font-bold mb-3 text-black">Chapters</h3>
-          {manga.chapters.map((chapter: any, index: number) => (
-            <Link
-              key={index}
-              href={`/manga-detail/${manga.manga.id}/chapter/${chapter.id}`}
-              className="min-h-12 relative flex justify-between items-center bg-[#F9FAFB] hover:bg-[#E5E7EB] cursor-pointer w-full"
-            >
-              <div className="absolute left-0 top-0 h-full w-1 bg-[#E5E7EB]"></div>
-              <div className=" ml-5 font-bold ">Chapter {manga.chapters.length - index}</div>
-              <div className="mr-5 text-sm text-gray-600">
-                {new Date(chapter.attributes.publishAt).toLocaleDateString()}
-              </div>
-            </Link>
-          ))}
+          {Array.isArray(manga.chapters) && manga.chapters.length === 0 ? (
+            <div className="text-gray-500 text-center p-4">
+              It seems that the manga currently has no chapters yet, stay tuned for the latest
+              information.
+            </div>
+          ) : (
+            manga.chapters.map((chapter: any, index: number) => (
+              <Link
+                key={index}
+                href={`/manga-detail/${manga.manga.id}/chapter/${chapter.id}`}
+                className="min-h-12 relative flex justify-between items-center bg-[#F9FAFB] hover:bg-[#E5E7EB] cursor-pointer w-full"
+              >
+                <div className="absolute left-0 top-0 h-full w-1 bg-[#E5E7EB]"></div>
+                <div className=" ml-5 font-bold ">Chapter {manga.chapters.length - index}</div>
+                <div className="mr-5 text-sm text-gray-600">
+                  {new Date(chapter.attributes.publishAt).toLocaleDateString()}
+                </div>
+              </Link>
+            ))
+          )}
         </div>
 
         {/* Recommended Manga */}
@@ -144,7 +151,7 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
                     <p className="text-sm font-medium line-clamp-2 text-black">
                       {recommendedItem.attributes?.title?.en || 'No Title'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">
                       {recommendedItem.author || 'Unknown Author'}
                     </p>
                   </div>

@@ -29,4 +29,26 @@ export interface FetchMangaParams {
   order?: Record<string, string>;
   availableTranslatedLanguage?: string[];
   includes?: string[];
+  status?: string[]; // Keep as array for API compatibility
+  includedTags?: string[];
+}
+
+export interface Tag {
+  id: string;
+  attributes: {
+    name: { en: string };
+  };
+}
+
+export interface MangaFilterProps {
+  open: boolean;
+  onClose: () => void;
+  onApplyFilter: (filters: FilterState) => void;
+  availableTags: Array<{ id: string; name: string }>;
+  currentFilters: FilterState;
+}
+
+export interface FilterState {
+  tags: string[];
+  status: string[]; // Change back to string[] for multiple selection
 }
