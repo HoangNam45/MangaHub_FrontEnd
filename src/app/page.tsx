@@ -123,22 +123,15 @@ export default function Home() {
           </h2>
           {(hasActiveFilters || search.isSearchMode) && (
             <div className="flex items-center gap-2">
-              {search.isSearchMode && <Tag color="blue">Search: {search.searchPerformed}</Tag>}
               {hasActiveFilters && (
                 <>
                   <span className="text-sm text-gray-600">Filters:</span>
                   {activeFilters.status.map((status) => (
-                    <Tag key={status} color="green">
-                      {status}
-                    </Tag>
+                    <Tag key={status}>{status}</Tag>
                   ))}
                   {activeFilters.tags.slice(0, 2).map((tagId) => {
                     const tag = AVAILABLE_TAGS.find((t) => t.id === tagId);
-                    return (
-                      <Tag key={tagId} color="green">
-                        {tag?.name || tagId}
-                      </Tag>
-                    );
+                    return <Tag key={tagId}>{tag?.name || tagId}</Tag>;
                   })}
                   {activeFilters.tags.length > 2 && (
                     <Tag>+{activeFilters.tags.length - 2} more</Tag>
