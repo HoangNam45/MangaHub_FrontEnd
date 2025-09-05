@@ -13,6 +13,7 @@ import MangaFilter from '@/components/MangaFilter/MangaFilter';
 import SearchInput from '@/components/SearchInput/SearchInput';
 import { AVAILABLE_TAGS } from '@/data/tags';
 import { useSearch } from '@/hooks/useSearch';
+import TrendingManga from '../components/TrendingManga/TrendingManga';
 
 // Hardcoded tags từ MangaDx API
 
@@ -105,6 +106,13 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Trending Manga Carousel - chỉ hiển thị khi không search */}
+      {!search.isSearchMode && (
+        <div className="mb-6">
+          <TrendingManga />
+        </div>
+      )}
+
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
