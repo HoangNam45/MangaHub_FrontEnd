@@ -13,6 +13,7 @@ import MangaFilter from '@/components/MangaFilter/MangaFilter';
 import SearchInput from '@/components/SearchInput/SearchInput';
 import { AVAILABLE_TAGS } from '@/data/tags';
 import { useSearch } from '@/hooks/useSearch';
+import TrendingManga from '../components/TrendingManga/TrendingManga';
 
 // Hardcoded tags từ MangaDx API
 
@@ -105,6 +106,13 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Trending Manga Carousel - chỉ hiển thị khi không search */}
+      {!search.isSearchMode && (
+        <div className="mb-6">
+          <TrendingManga />
+        </div>
+      )}
+
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -115,15 +123,22 @@ export default function Home() {
           </h2>
           {(hasActiveFilters || search.isSearchMode) && (
             <div className="flex items-center gap-2">
+              {search.isSearchMode && <Tag color="blue">Search: {search.searchPerformed}</Tag>}
               {hasActiveFilters && (
                 <>
                   <span className="text-sm text-gray-600">Filters:</span>
                   {activeFilters.status.map((status) => (
-                    <Tag key={status}>{status}</Tag>
+                    <Tag key={status} color="green">
+                      {status}
+                    </Tag>
                   ))}
                   {activeFilters.tags.slice(0, 2).map((tagId) => {
                     const tag = AVAILABLE_TAGS.find((t) => t.id === tagId);
-                    return <Tag key={tagId}>{tag?.name || tagId}</Tag>;
+                    return (
+                      <Tag key={tagId} color="green">
+                        {tag?.name || tagId}
+                      </Tag>
+                    );
                   })}
                   {activeFilters.tags.length > 2 && (
                     <Tag>+{activeFilters.tags.length - 2} more</Tag>
