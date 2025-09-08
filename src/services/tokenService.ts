@@ -103,6 +103,7 @@ class TokenService {
 
       const currentTime = Date.now() / 1000;
       // Add 5 minutes buffer to prevent edge cases
+
       return decoded.exp < currentTime + 300;
     } catch (error) {
       return true;

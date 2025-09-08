@@ -43,7 +43,7 @@ class AuthService {
         throw new Error('No valid refresh token available');
       }
 
-      const response = await axiosClient.post('/auth/refresh', {
+      const response = await axiosClient.post('/auth/refresh-token', {
         refresh_token: refreshToken,
       });
 
