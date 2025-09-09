@@ -15,6 +15,11 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'MangaHub',
   description: 'A manga reading platform',
+  icons: {
+    icon: '/img/favico.ico',
+    shortcut: '/img/favico.ico',
+    apple: '/img/favico.ico',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
