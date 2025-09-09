@@ -122,4 +122,58 @@ export const mangaService = {
       );
     }
   },
+
+  async followingManga(mangaId: string): Promise<void> {
+    try {
+      const response = await axiosClient.post(`/follow/${mangaId}`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to follow manga');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to follow manga');
+    }
+  },
+  async unfollowingManga(mangaId: string): Promise<void> {
+    try {
+      const response = await axiosClient.delete(`/follow/${mangaId}`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to unfollow manga');
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to unfollow manga');
+    }
+  },
+
+  async getFollowedMangaIds(): Promise<string[]> {
+    try {
+      const response = await axiosClient.get('/follow');
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch followed manga');
+      }
+      return response.data.data; // Expecting array of manga IDs
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || 'Failed to fetch followed manga'
+      );
+    }
+  },
+
+  // Keep the original method for following page that needs full data
+  async getFollowedManga(limit?: number, offset?: number): Promise<Manga[]> {
+    try {
+      const params: any = {};
+      if (limit !== undefined) params.limit = limit;
+      if (offset !== undefined) params.offset = offset;
+
+      const response = await axiosClient.get('/follow/details', { params });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch followed manga');
+      }
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || error.message || 'Failed to fetch followed manga'
+      );
+    }
+  },
 };

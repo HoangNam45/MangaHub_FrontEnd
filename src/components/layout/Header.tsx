@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, Dropdown } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import { Archive, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -34,15 +37,27 @@ export default function Header() {
             menu={{
               items: [
                 {
+                  key: 'followed-mangas',
+                  label: (
+                    <div
+                      className="w-full py-2 cursor-pointer text-left flex items-center gap-2"
+                      onClick={() => router.push('/following')}
+                    >
+                      <Archive className="h-4 w-4" />
+                      Followed Manga
+                    </div>
+                  ),
+                },
+                {
                   key: 'signout',
                   label: (
-                    <Button
-                      variant="outline"
-                      className="w-full cursor-pointer text-left"
+                    <div
+                      className="w-full py-2 cursor-pointer text-left flex items-center gap-2"
                       onClick={logout}
                     >
+                      <LogOut className="h-4 w-4" />
                       Sign out
-                    </Button>
+                    </div>
                   ),
                 },
               ],

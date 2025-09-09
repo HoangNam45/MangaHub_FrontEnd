@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Input } from 'antd';
 import { Search, X } from 'lucide-react';
 import type { SearchSuggestion } from '@/hooks/useSearch';
+import Image from 'next/image';
 
 interface FilterState {
   tags: string[];
@@ -34,11 +36,12 @@ export default function SearchInput({
   onSearch,
   onClearSearch,
   onHideSuggestions,
-  onSelectSuggestion,
+  onSelectSuggestion: _onSelectSuggestion,
   isSearchMode,
   activeFilters,
   className,
 }: SearchInputProps) {
+  const router = useRouter();
   const [inputFocused, setInputFocused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<any>(null);
@@ -68,7 +71,9 @@ export default function SearchInput({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    onSelectSuggestion(suggestion);
+    // Navigate to manga detail page instead of searching
+    router.push(`/manga-detail/${suggestion.id}`);
+    onHideSuggestions();
     inputRef.current?.blur();
   };
 
@@ -91,16 +96,16 @@ export default function SearchInput({
         onKeyDown={handleKeyDown}
         onFocus={() => setInputFocused(true)}
         prefix={<Search className="h-4 w-4 text-gray-400" />}
-        suffix={
-          isSearchMode ? (
-            <button
-              onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          ) : null
-        }
+        // suffix={
+        //   isSearchMode ? (
+        //     <button
+        //       onClick={handleClear}
+        //       className="text-gray-400 hover:text-gray-600 transition-colors"
+        //     >
+        //       <X className="h-4 w-4" />
+        //     </button>
+        //   ) : null
+        // }
         className="pr-10"
       />
 
@@ -124,6 +129,12 @@ export default function SearchInput({
                 >
                   <div className="flex items-center gap-2">
                     {/* <Search className="h-4 w-4 text-gray-400 flex-shrink-0" /> */}
+                    <Image
+                      src={suggestion.coverUrl || '/placeholder.png'}
+                      alt={suggestion.title || 'Manga'}
+                      width={40}
+                      height={40}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm text-gray-900 truncate">
                         {suggestion.title}

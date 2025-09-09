@@ -1,114 +1,108 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Filter, Heart, Calendar, User } from 'lucide-react';
+import { Filter, Heart, Calendar, User, ArrowLeft } from 'lucide-react';
 import { Pagination, Tag } from 'antd';
-import { mangaService } from '@/services/mangaService';
 import type { Manga } from '@/types/manga';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import MangaFilter from '@/components/MangaFilter/MangaFilter';
 import SearchInput from '@/components/SearchInput/SearchInput';
 import { AVAILABLE_TAGS } from '@/data/tags';
 import { useSearch } from '@/hooks/useSearch';
+import { useMangaList, useToggleFollowManga } from '@/hooks/useMangaQuery';
+import { useAuth } from '@/hooks/useAuth';
 import TrendingManga from '../components/TrendingManga/TrendingManga';
-
-// Hardcoded tags từ MangaDx API
 
 interface FilterState {
   tags: string[];
-  status: string[]; // Change back to string[] for multiple selection
+  status: string[];
 }
 
 export default function Home() {
-  // Browse manga states (không thay đổi fetchMangaList logic)
-  const [mangaList, setMangaList] = useState<Manga[]>([]);
+  const router = useRouter();
+
+  // Authentication
+  const { isAuthenticated } = useAuth();
+
+  // UI state
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>({
     tags: [],
     status: [],
   });
 
-  // Search functionality (riêng biệt)
+  // Search functionality
   const search = useSearch(activeFilters);
-  const { isSearchMode, searchPerformed, performSearch } = search;
-
-  // Update search filters when activeFilters change
-  useEffect(() => {
-    if (isSearchMode && searchPerformed) {
-      // Re-perform search with new filters
-      performSearch(searchPerformed, activeFilters);
-    }
-  }, [activeFilters, performSearch, isSearchMode, searchPerformed]);
 
   // MangaDx API có giới hạn offset tối đa khoảng 10000
   const MAX_OFFSET = 10000;
 
-  useEffect(() => {
-    // Không gọi browse API khi đang ở search mode
-    if (isSearchMode) {
+  // React Query for manga list (only when not in search mode)
+  const {
+    data: mangaData,
+    isLoading: mangaLoading,
+    error: mangaError,
+  } = useMangaList({
+    limit: 15,
+    offset: (page - 1) * 15,
+    order: { latestUploadedChapter: 'desc' },
+    availableTranslatedLanguage: ['en'],
+    status: activeFilters.status.length > 0 ? activeFilters.status : undefined,
+    includedTags: activeFilters.tags.length > 0 ? activeFilters.tags : undefined,
+  });
+
+  // Follow/Unfollow functionality with React Query (only if authenticated)
+  const { toggleFollow, isLoadingManga, isFollowed } = useToggleFollowManga();
+
+  // Handle follow/unfollow
+  const handleFollow = (mangaId: string) => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.push('/login');
       return;
     }
-
-    async function fetchManga() {
-      const limit = 15;
-      const offset = (page - 1) * limit;
-
-      // Kiểm tra offset không vượt quá giới hạn
-      if (offset >= MAX_OFFSET) {
-        setError('Cannot load more pages. You have reached the maximum limit.');
-        setMangaList([]);
-        setTotal(MAX_OFFSET);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await mangaService.fetchMangaList({
-          limit,
-          offset,
-          order: { latestUploadedChapter: 'desc' },
-          availableTranslatedLanguage: ['en'],
-          includes: ['cover_art', 'author'],
-          status: activeFilters.status.length > 0 ? activeFilters.status : undefined,
-          includedTags: activeFilters.tags.length > 0 ? activeFilters.tags : undefined,
-        });
-
-        setMangaList(response.data);
-        // Giới hạn total để không vượt quá MAX_OFFSET
-        const limitedTotal = Math.min(response.total, MAX_OFFSET);
-        setTotal(limitedTotal);
-      } catch (error: any) {
-        setError(error.message || 'Failed to fetch manga data');
-        setMangaList([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchManga();
-  }, [page, activeFilters, isSearchMode]);
+    toggleFollow(mangaId);
+  };
 
   const handleApplyFilter = (filters: FilterState) => {
     setActiveFilters(filters);
     setPage(1); // Reset to first page when filters change
+
+    // If in search mode, re-perform search with new filters
+    if (search.isSearchMode && search.searchPerformed) {
+      search.performSearch(search.searchPerformed, filters);
+    }
+  };
+
+  // Handle back button click - exit search mode and clear everything
+  const handleBackFromSearch = () => {
+    search.clearSearch();
+    setActiveFilters({ tags: [], status: [] });
+    setPage(1);
   };
 
   const hasActiveFilters = activeFilters.tags.length > 0 || activeFilters.status.length > 0;
+
+  // Get current data based on mode
+  const currentMangaList = search.isSearchMode ? search.searchResults : mangaData?.data || [];
+  const currentTotal = search.isSearchMode ? search.searchTotal : mangaData?.total || 0;
+  const currentLoading = search.isSearchMode ? search.loadingSearch : mangaLoading;
+  const currentError = search.isSearchMode ? search.searchError : mangaError?.message;
+
+  // Check if offset exceeds limit for pagination
+  const exceedsLimit = (page - 1) * 15 >= MAX_OFFSET;
+  const limitedTotal = Math.min(currentTotal, MAX_OFFSET);
 
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Trending Manga Carousel - chỉ hiển thị khi không search */}
       {!search.isSearchMode && (
-        <div className="mb-6">
+        <div className="mb-8">
           <TrendingManga />
         </div>
       )}
@@ -116,6 +110,16 @@ export default function Home() {
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
+          {search.isSearchMode && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleBackFromSearch}
+              className="flex cursor-pointer items-center justify-center"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
           <h2 className="text-2xl font-bold">
             {search.isSearchMode
               ? `Search Results for "${search.searchPerformed}"`
@@ -174,14 +178,16 @@ export default function Home() {
       </div>
 
       {/* Error message */}
-      {(error || search.searchError) && (
+      {(currentError || exceedsLimit) && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-          {error || search.searchError}
+          {exceedsLimit
+            ? 'Cannot load more pages. You have reached the maximum limit.'
+            : currentError}
         </div>
       )}
 
       {/* Loading state */}
-      {(loading || search.loadingSearch) && (
+      {currentLoading && (
         <div className="flex justify-center items-center py-12">
           <div className="text-gray-500">
             {search.isSearchMode ? 'Searching manga...' : 'Loading manga...'}
@@ -199,7 +205,7 @@ export default function Home() {
 
       {/* Manga grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
-        {(search.isSearchMode ? search.searchResults : mangaList).map((manga) => (
+        {currentMangaList.map((manga) => (
           <Link key={manga.id} href={`/manga-detail/${manga.id}`} className="block">
             <Card className="relative max-h-114 cursor-pointer flex flex-col overflow-hidden rounded-2xl border-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
               {/* Cover */}
@@ -243,16 +249,33 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating action (Follow) */}
+              {/* Floating action (Follow/Unfollow) */}
               <Button
                 size="sm"
-                className="absolute cursor-pointer right-2 top-2 z-10 bg-white/90 text-black hover:bg-white shadow"
+                className={`absolute cursor-pointer right-2 top-2 z-10 shadow transition-colors ${
+                  isAuthenticated && isFollowed(manga.id)
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-white/90 text-black hover:bg-white'
+                }`}
                 onClick={(e) => {
-                  e.preventDefault(); /* handle follow here */
+                  e.preventDefault();
+                  handleFollow(manga.id);
                 }}
+                disabled={isAuthenticated && isLoadingManga(manga.id)}
               >
-                <Heart className="mr-1 h-4 w-4 text-red-500" />
-                Follow
+                {isAuthenticated && isLoadingManga(manga.id) ? (
+                  <>
+                    <div className="mr-1 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Heart
+                      className={`mr-1 h-4 w-4 ${isAuthenticated && isFollowed(manga.id) ? 'fill-current' : ''}`}
+                    />
+                    {isAuthenticated && isFollowed(manga.id) ? 'Unfollow' : 'Follow'}
+                  </>
+                )}
               </Button>
             </Card>
           </Link>
@@ -264,7 +287,7 @@ export default function Home() {
         <Pagination
           current={search.isSearchMode ? search.searchPage : page}
           pageSize={15}
-          total={search.isSearchMode ? search.searchTotal : total}
+          total={limitedTotal}
           showSizeChanger={false}
           onChange={(p) => (search.isSearchMode ? search.setSearchPage(p) : setPage(p))}
         />

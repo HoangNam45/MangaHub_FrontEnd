@@ -40,7 +40,6 @@ export const TokenAwareComponent = () => {
   const handleLogin = async (token: string) => {
     try {
       await login(token);
-      console.log('Login successful!');
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -49,7 +48,6 @@ export const TokenAwareComponent = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      console.log('Logout successful!');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -57,7 +55,6 @@ export const TokenAwareComponent = () => {
 
   const checkTokenStatus = () => {
     const tokenInfo = getTokenInfo();
-    console.log('Token Info:', tokenInfo);
   };
 
   return (
@@ -86,26 +83,21 @@ export const authServiceUsage = async () => {
     // Login - tokens are automatically stored in cookies
     const loginData = { email: 'user@example.com', password: 'password' };
     const loginResponse = await authService.login(loginData);
-    console.log('Login response:', loginResponse);
 
     // Check authentication status
     const isAuthenticated = authService.isAuthenticated();
-    console.log('Is authenticated:', isAuthenticated);
 
     // Get current user
     const currentUser = authService.getCurrentUser();
-    console.log('Current user:', currentUser);
 
     // Check if token needs refresh
     const shouldRefresh = authService.shouldRefreshToken();
     if (shouldRefresh) {
       await authService.refreshTokens();
-      console.log('Token refreshed successfully');
     }
 
     // Logout - tokens are automatically cleared
     await authService.logout();
-    console.log('Logout successful');
   } catch (error) {
     console.error('Auth operation failed:', error);
   }
@@ -127,9 +119,6 @@ export const advancedTokenUsage = () => {
   if (accessToken) {
     const expirationTime = tokenService.getTokenExpirationTime(accessToken);
     const timeUntilExpiration = tokenService.getTimeUntilExpiration(accessToken);
-
-    console.log('Token expires at:', new Date(expirationTime || 0));
-    console.log('Time until expiration:', timeUntilExpiration, 'ms');
   }
 
   // Set token with custom expiration

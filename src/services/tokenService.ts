@@ -217,7 +217,7 @@ class TokenService {
     if (!timeUntilExpiration) return true;
 
     // Refresh if token expires in next 5 minutes (300000 ms)
-    return timeUntilExpiration < 300000;
+    return timeUntilExpiration < 500000;
   }
 
   /**
