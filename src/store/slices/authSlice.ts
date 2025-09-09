@@ -75,6 +75,7 @@ export const refreshToken = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const refreshTokenValue = tokenService.getRefreshToken();
+
       if (!refreshTokenValue || tokenService.isTokenExpired(refreshTokenValue)) {
         throw new Error('No valid refresh token available');
       }

@@ -5,39 +5,57 @@ import Image from 'next/image';
 import { Tag } from 'antd';
 import { mangaService } from '@/services/mangaService';
 import { Button } from '@/components/ui/button';
+import { Heart } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToggleFollowManga } from '@/hooks/useMangaQuery';
 
 export default function MangaDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [manga, setManga] = useState<any>(null);
   const [recommendedManga, setRecommendedManga] = useState<any[]>([]);
 
   const { id } = use(params);
+  const router = useRouter();
+
+  // Authentication and follow functionality
+  const { isAuthenticated } = useAuth();
+  const { toggleFollow, isLoadingManga, isFollowed } = useToggleFollowManga();
+
+  // Handle follow/unfollow
+  const handleFollow = () => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.push('/login');
+      return;
+    }
+    toggleFollow(id);
+  };
 
   useEffect(() => {
     async function fetchMangaDetail() {
-      setLoading(true);
+      // setLoading(true);
       setError(null);
       try {
         const [mangaDetail, recommendedList] = await Promise.all([
           mangaService.getMangaDetail(id),
-          mangaService.fetchMangaList({ limit: 4, offset: 0 }), // Fetch 6 recommended manga
+          mangaService.fetchMangaList({ limit: 4, offset: 0 }), // Fetch 4 recommended manga
         ]);
         setManga(mangaDetail);
         setRecommendedManga(recommendedList.data);
-        console.log(mangaDetail);
       } catch (error: any) {
         setError(error.message || 'Failed to fetch manga data');
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     }
 
     fetchMangaDetail();
   }, [id]);
 
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!manga) return null;
 
@@ -67,7 +85,7 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
         />
         <div className="text-white text-2xl ml-4 mt-24">
           <div className="min-h-14">
-            {manga.manga.attributes.title.en}
+            <div className="line-clamp-1">{manga.manga.attributes.title.en}</div>
             <div className="text-base font-light line-clamp-1">{manga.manga.author}</div>
           </div>
           <div className="flex flex-wrap gap-2 mt-7">
@@ -86,17 +104,43 @@ export default function MangaDetailPage({ params }: { params: Promise<{ id: stri
               </Tag>
             ))}
           </div>
-          <div className="mt-3">
+          <div className="mt-3 flex gap-3">
             <Link
               href={`/manga-detail/${manga.manga.id}/chapter/${manga.chapters[manga.chapters.length - 1]?.id}`}
             >
               <Button
                 variant="outline"
-                className="!text-black cursor-pointer bg-[#E5E7EB]  !text-base w-50"
+                className="!text-black cursor-pointer bg-[#E5E7EB] !text-base w-50"
               >
                 Read from Beginning
               </Button>
             </Link>
+
+            {/* Follow Button */}
+            <Button
+              variant="outline"
+              className={`cursor-pointer !text-base w-32 flex items-center gap-2 ${
+                isAuthenticated && isFollowed(id)
+                  ? '!text-white bg-red-500 hover:bg-red-600 border-red-500'
+                  : '!text-black bg-[#E5E7EB] hover:bg-[#D1D5DB] border-[#E5E7EB]'
+              }`}
+              onClick={handleFollow}
+              disabled={isAuthenticated && isLoadingManga(id)}
+            >
+              {isAuthenticated && isLoadingManga(id) ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <Heart
+                    className={`h-4 w-4 ${isAuthenticated && isFollowed(id) ? 'fill-current' : ''}`}
+                  />
+                  {isAuthenticated && isFollowed(id) ? 'Unfollow' : 'Follow'}
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>

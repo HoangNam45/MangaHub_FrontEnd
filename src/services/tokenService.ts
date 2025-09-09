@@ -103,6 +103,7 @@ class TokenService {
 
       const currentTime = Date.now() / 1000;
       // Add 5 minutes buffer to prevent edge cases
+
       return decoded.exp < currentTime + 300;
     } catch (error) {
       return true;
@@ -216,7 +217,7 @@ class TokenService {
     if (!timeUntilExpiration) return true;
 
     // Refresh if token expires in next 5 minutes (300000 ms)
-    return timeUntilExpiration < 300000;
+    return timeUntilExpiration < 500000;
   }
 
   /**
