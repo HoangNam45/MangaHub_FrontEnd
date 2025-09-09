@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Header from '@/components/layout/Header';
 import ReduxProvider from '@/store/ReduxProvider';
+import QueryProvider from '@/providers/QueryProvider';
 import AuthDebug from '@/components/AuthDebug';
 import TokenRefresh from '@/components/TokenRefresh';
 import 'antd/dist/reset.css';
@@ -20,12 +21,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ReduxProvider>
-          <TokenRefresh />
-          <Header />
-          <main className="pt-16">{children}</main>
-          <AuthDebug />
-        </ReduxProvider>
+        <QueryProvider>
+          <ReduxProvider>
+            <TokenRefresh />
+            <Header />
+            <main className="pt-16">{children}</main>
+            <AuthDebug />
+          </ReduxProvider>
+        </QueryProvider>
       </body>
     </html>
   );

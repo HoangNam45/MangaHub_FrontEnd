@@ -6,6 +6,7 @@ export interface SearchSuggestion {
   id: string;
   title: string;
   author?: string;
+  coverUrl?: string;
 }
 
 export interface UseSearchReturn {
@@ -90,6 +91,7 @@ export const useSearch = (initialFilters?: FilterState): UseSearchReturn => {
           id: manga.id,
           title: manga.attributes.title.en || 'No Title',
           author: manga.author,
+          coverUrl: manga.coverUrl,
         }));
 
         setSuggestions(suggestions);

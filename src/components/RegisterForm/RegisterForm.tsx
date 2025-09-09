@@ -33,17 +33,15 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    console.log('Register data:', data);
     setIsLoading(true);
     setSubmitError(null);
 
     try {
       const result = await AuthService.register(data);
-      console.log('Register success:', result);
+
       setUserEmail(data.email);
       setCurrentStep('verify');
     } catch (error: any) {
-      console.error('Register failed:', error);
       const errorMessage = error?.message || 'Registration failed. Please try again.';
       setSubmitError(errorMessage);
     } finally {

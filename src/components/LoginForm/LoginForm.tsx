@@ -36,13 +36,11 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log('Login data:', data);
     setIsLoading(true);
     setSubmitError(null);
 
     try {
       const result = await AuthService.login(data);
-      console.log('Login success:', result);
 
       const accessToken = result.accessToken;
 

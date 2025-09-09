@@ -16,9 +16,6 @@ export default function MangaChapterPage({
   const [manga, setManga] = useState<any>(null);
   const { id, chapterId } = use(params);
 
-  console.log(pages.images);
-  console.log(manga);
-
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -32,7 +29,6 @@ export default function MangaChapterPage({
 
         setPages(chapterImages);
         setManga(mangaDetail);
-        console.log(chapterImages);
       } catch (error: any) {
         setError(error.message || 'Failed to fetch chapter data');
       } finally {
@@ -43,7 +39,7 @@ export default function MangaChapterPage({
     fetchData();
   }, [chapterId, id]);
 
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!manga || !pages.images) return null;
 
@@ -63,28 +59,41 @@ export default function MangaChapterPage({
       />
 
       {/* Chapter pages */}
-      <div className="flex flex-col items-center">
-        {pages.images?.map((image: any, idx: number) => (
-          <Image
-            key={idx}
-            src={image.url}
-            alt={`Page ${idx + 1}`}
-            width={800}
-            height={1200}
-            className="w-full max-w-3xl"
-            priority={idx === 0}
-          />
-        ))}
-      </div>
+      {pages.images && pages.images.length > 0 ? (
+        <>
+          <div className="flex flex-col items-center">
+            {pages.images?.map((image: any, idx: number) => (
+              <Image
+                key={idx}
+                src={image.url}
+                alt={`Page ${idx + 1}`}
+                width={800}
+                height={1200}
+                className="w-full max-w-3xl"
+                priority={idx === 0}
+              />
+            ))}
+          </div>
 
-      {/* Navigation at bottom */}
-      <ChapterNavigation
-        mangaId={id}
-        currentChapterId={chapterId}
-        chapters={manga.chapters}
-        currentChapterIndex={currentChapterIndex}
-        currentChapterNumber={currentChapterNumber}
-      />
+          {/* Navigation at bottom */}
+          <ChapterNavigation
+            mangaId={id}
+            currentChapterId={chapterId}
+            chapters={manga.chapters}
+            currentChapterIndex={currentChapterIndex}
+            currentChapterNumber={currentChapterNumber}
+          />
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="text-center text-gray-600">
+            {/* <p className="text-xl mb-2">Oh no ;'(</p> */}
+            <p className="text-lg">
+              This chapter hasn't been updated yet. Please check back later!
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
