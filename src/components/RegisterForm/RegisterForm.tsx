@@ -54,7 +54,6 @@ export default function RegisterPage() {
       if (accessToken) {
         // Auto-login the user with the token from verification
         await login(accessToken);
-        console.log('Auto-login successful after verification');
 
         // Redirect to home page
         router.push('/');
@@ -64,7 +63,7 @@ export default function RegisterPage() {
 
         if (storedToken) {
           await login(storedToken);
-          console.log('Auto-login successful with stored token');
+
           router.push('/');
         } else {
           console.error('No access token found after verification');
